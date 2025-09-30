@@ -1,0 +1,380 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//////////////////////////
+// Enums
+//////////////////////////
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum ProductType {
+  RAW
+  SEMI_FINISHED
+  FINISHED
+}
+
+enum TransactionType {
+  PURCHASE
+  SALE
+  TRANSFER
+  USAGE
+  ADJUSTMENT
+  MANUAL
+}
+
+enum AlertType {
+  LOW_STOCK
+  OVERSTOCK
+  EXPIRY
+  REORDER
+}
+
+enum POStatus {
+  PENDING
+  RECEIVED
+  PARTIALLY_RECEIVED
+  CANCELLED
+}
+
+enum SOStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+//////////////////////////
+// Multi-tenant + Users
+//////////////////////////
+model Tenant {
+  id          String       @id @default(cuid())
+  name        String
+  domain      String       @unique
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  users          User[]
+  warehouses     Warehouse[]
+  recipes        Recipe[]
+  items          Item[]
+  purchaseOrders PurchaseOrder[]
+  saleOrders     SaleOrder[]
+  alerts         Alert[]
+}
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String?
+  role        Role      @default(USER)
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  analytics    AnalyticsLog[] @relation("AnalyticsUser")
+  transactions InventoryTransaction[] @relation("UserTransactions")
+}
+
+//////////////////////////
+// Items / Products
+//////////////////////////
+model Item {
+  id            String     @id @default(cuid())
+  sku           String     @unique
+  name          String
+  description   String?
+  unit          String
+  type          ProductType @default(RAW)
+  cost          Decimal     @default(0) @db.Decimal(18,6)
+  price         Decimal     @default(0) @db.Decimal(18,6)
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  stock         Stock[]
+  recipeItems   RecipeItem[]
+  recipes       Recipe[]
+
+  suppliers     ItemSupplier[]
+  poItems       POItem[]
+  soItems       SOItem[]
+  transactions  InventoryTransaction[]
+  alerts        Alert[]
+  analytics     AnalyticsLog[] @relation("AnalyticsItem")
+
+  @@index([tenantId])
+}
+
+//////////////////////////
+// Warehouse & Stock
+//////////////////////////
+model Warehouse {
+  id          String    @id @default(cuid())
+  name        String
+  code        String?   @unique
+  location    String?
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  stock       Stock[]
+  transactions InventoryTransaction[]
+  alerts       Alert[]
+
+  @@index([tenantId])
+}
+
+model Stock {
+  id           String     @id @default(cuid())
+  warehouseId  String
+  warehouse    Warehouse  @relation(fields: [warehouseId], references: [id])
+  itemId       String
+  item         Item       @relation(fields: [itemId], references: [id])
+  quantity     Decimal    @default(0) @db.Decimal(18,6)
+  reserved     Decimal    @default(0) @db.Decimal(18,6)
+  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime   @default(now())
+
+  movements    StockMovement[]
+  transactions InventoryTransaction[]
+
+  @@unique([warehouseId, itemId])
+  @@index([itemId])
+}
+
+model StockMovement {
+  id         String    @id @default(cuid())
+  stockId    String
+  stock      Stock     @relation(fields: [stockId], references: [id])
+  type       MovementType
+  quantity   Decimal   @db.Decimal(18,6)
+  reference  String?
+  createdAt  DateTime  @default(now())
+  createdBy  String?
+}
+
+//////////////////////////
+// Suppliers & Procurement
+//////////////////////////
+model Supplier {
+  id          String         @id @default(cuid())
+  name        String
+  contact     String?
+  email       String?
+  phone       String?
+  address     String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  items          ItemSupplier[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model ItemSupplier {
+  id         String    @id @default(cuid())
+  itemId     String
+  item       Item      @relation(fields: [itemId], references: [id])
+  supplierId String
+  supplier   Supplier  @relation(fields: [supplierId], references: [id])
+  cost       Decimal   @db.Decimal(18,6)
+  leadTime   Int?
+  currency   String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([itemId])
+  @@index([supplierId])
+}
+
+model PurchaseOrder {
+  id          String      @id @default(cuid())
+  supplierId  String
+  supplier    Supplier    @relation(fields: [supplierId], references: [id])
+  tenantId    String?
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id])
+  reference   String?     @unique
+  status      POStatus    @default(PENDING)
+  expectedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items        POItem[]
+  transactions InventoryTransaction[] @relation("POTransactions")
+}
+
+model POItem {
+  id            String        @id @default(cuid())
+  poId          String
+  purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id])
+  itemId        String
+  item          Item          @relation(fields: [itemId], references: [id])
+  quantity      Decimal       @db.Decimal(18,6)
+  unitCost      Decimal       @db.Decimal(18,6)
+  receivedQty   Decimal       @default(0) @db.Decimal(18,6)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+//////////////////////////
+// Sales Orders
+//////////////////////////
+model SaleOrder {
+  id         String    @id @default(cuid())
+  tenantId   String?
+  tenant     Tenant?   @relation(fields: [tenantId], references: [id])
+  customer   String
+  reference  String?   @unique
+  status     SOStatus  @default(PENDING)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  items        SOItem[]
+  transactions InventoryTransaction[] @relation("SOTransactions")
+}
+
+model SOItem {
+  id         String     @id @default(cuid())
+  soId       String
+  saleOrder  SaleOrder  @relation(fields: [soId], references: [id])
+  itemId     String
+  item       Item       @relation(fields: [itemId], references: [id])
+  quantity   Decimal    @db.Decimal(18,6)
+  unitPrice  Decimal    @db.Decimal(18,6)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+//////////////////////////
+// Recipes / BOM
+//////////////////////////
+model Recipe {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  productId   String?
+  product     Item?        @relation(fields: [productId], references: [id])
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  items       RecipeItem[]
+  batches     ProductionBatch[]
+}
+
+model RecipeItem {
+  id         String    @id @default(cuid())
+  recipeId   String
+  recipe     Recipe    @relation(fields: [recipeId], references: [id])
+  itemId     String
+  item       Item      @relation(fields: [itemId], references: [id])
+  quantity   Decimal   @db.Decimal(18,6)
+  unit       String?
+
+  @@unique([recipeId, itemId])
+}
+
+//////////////////////////
+// Production / Batches
+//////////////////////////
+model ProductionBatch {
+  id           String    @id @default(cuid())
+  recipeId     String
+  recipe       Recipe    @relation(fields: [recipeId], references: [id])
+  batchRef     String?   @unique
+  quantity     Decimal   @db.Decimal(18,6)
+  costPerUnit  Decimal?  @db.Decimal(18,6)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  transactions  InventoryTransaction[] @relation("BatchTransactions")
+}
+
+//////////////////////////
+// Inventory Transactions
+//////////////////////////
+model InventoryTransaction {
+  id               String       @id @default(cuid())
+  type             TransactionType
+  itemId           String
+  item             Item         @relation(fields: [itemId], references: [id])
+  warehouseId      String?
+  warehouse        Warehouse?   @relation(fields: [warehouseId], references: [id])
+  stockId          String?
+  stock            Stock?       @relation(fields: [stockId], references: [id])
+  quantity         Decimal      @db.Decimal(18,6)
+  costPerUnit      Decimal?     @db.Decimal(18,6)
+  reference        String?
+  purchaseOrderId  String?
+  purchaseOrder    PurchaseOrder? @relation("POTransactions", fields: [purchaseOrderId], references: [id])
+  saleOrderId      String?
+  saleOrder        SaleOrder?   @relation("SOTransactions", fields: [saleOrderId], references: [id])
+  productionBatchId String?
+  productionBatch  ProductionBatch? @relation("BatchTransactions", fields: [productionBatchId], references: [id])
+  createdById      String?
+  createdBy        User?        @relation("UserTransactions", fields: [createdById], references: [id])
+  createdAt        DateTime     @default(now())
+  note             String?
+}
+
+//////////////////////////
+// Alerts & Notifications
+//////////////////////////
+model Alert {
+  id          String     @id @default(cuid())
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+  itemId      String
+  item        Item       @relation(fields: [itemId], references: [id])
+  warehouseId String?
+  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
+  type        AlertType
+  message     String
+  isResolved  Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  resolvedAt  DateTime?
+}
+
+//////////////////////////
+// Analytics / Auditing
+//////////////////////////
+model AnalyticsLog {
+  id         String   @id @default(cuid())
+  event      String
+  entity     String
+  entityId   String
+  userId     String?
+  user       User?    @relation("AnalyticsUser", fields: [userId], references: [id])
+  itemId     String?
+  item       Item?    @relation("AnalyticsItem", fields: [itemId], references: [id])
+  metadata   Json?
+  createdAt  DateTime @default(now())
+}
