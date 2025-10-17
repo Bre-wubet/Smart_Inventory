@@ -11,6 +11,7 @@ router.use('/auth', require('../modules/auth/auth.routes'));
 router.use('/inventory', require('../modules/inventory'));
 router.use('/warehouse', require('../modules/warehouse'));
 router.use('/recipe', require('../modules/recipe'));
+router.use('/supplier', require('../modules/supplier'));
 router.use('/purchase', require('../modules/purchase'));
 router.use('/sales', require('../modules/sales'));
 
