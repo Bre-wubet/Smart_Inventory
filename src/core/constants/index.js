@@ -2,7 +2,9 @@
 const Role = {
   ADMIN: 'ADMIN',
   MANAGER: 'MANAGER',
-  USER: 'USER'
+  CUSTOMER: 'CUSTOMER',
+  SUPPLIER: 'SUPPLIER',
+  STAFF: 'STAFF'
 };
 
 const ProductType = {
@@ -17,7 +19,8 @@ const TransactionType = {
   TRANSFER: 'TRANSFER',
   USAGE: 'USAGE',
   ADJUSTMENT: 'ADJUSTMENT',
-  MANUAL: 'MANUAL'
+  MANUAL: 'MANUAL',
+  RETURN: 'RETURN'
 };
 
 const AlertType = {
@@ -45,6 +48,13 @@ const MovementType = {
   OUT: 'OUT'
 };
 
+const BatchStatus = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
 // Business constants
 const STOCK_THRESHOLDS = {
   LOW_STOCK_PERCENTAGE: 0.1, // 10% of average stock
@@ -62,6 +72,28 @@ const PAGINATION = {
   MAX_LIMIT: 100
 };
 
+// Security constants
+const SECURITY = {
+  PASSWORD_MIN_LENGTH: 8,
+  PASSWORD_REQUIRE_UPPERCASE: true,
+  PASSWORD_REQUIRE_LOWERCASE: true,
+  PASSWORD_REQUIRE_NUMBERS: true,
+  PASSWORD_REQUIRE_SYMBOLS: true,
+  MAX_LOGIN_ATTEMPTS: 5,
+  LOCKOUT_DURATION_MINUTES: 30,
+  SESSION_TIMEOUT_HOURS: 8,
+  REFRESH_TOKEN_EXPIRY_DAYS: 30
+};
+
+// Tenant constants
+const TENANT = {
+  MAX_USERS_PER_TENANT: 1000,
+  MAX_WAREHOUSES_PER_TENANT: 50,
+  MAX_ITEMS_PER_TENANT: 10000,
+  DEFAULT_PLAN: 'BASIC',
+  PLANS: ['BASIC', 'PROFESSIONAL', 'ENTERPRISE']
+};
+
 module.exports = {
   Role,
   ProductType,
@@ -70,7 +102,10 @@ module.exports = {
   POStatus,
   SOStatus,
   MovementType,
+  BatchStatus,
   STOCK_THRESHOLDS,
   COST_CALCULATION,
-  PAGINATION
+  PAGINATION,
+  SECURITY,
+  TENANT
 };

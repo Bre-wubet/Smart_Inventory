@@ -22,6 +22,7 @@ router.use('/sales', require('../modules/sales'));
 router.use('/costing', require('../modules/costing'));
 router.use('/notifications', require('../modules/notifications'));
 router.use('/user', require('../modules/user'));
+router.use('/tenant', require('../modules/tenant'));
 router.use('/analytics', require('../modules/analytics'));
 
 router.use((req, res, next) => next(new NotFoundError('Route not found')));

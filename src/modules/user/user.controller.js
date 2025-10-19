@@ -229,6 +229,175 @@ async function getUserStats(req, res, next) {
   }
 }
 
+async function bulkUpdateUsers(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { userIds, updateData } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      throw new ValidationError('User IDs array is required');
+    }
+
+    const result = await userService.bulkUpdateUsers(tenantId, userIds, updateData);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function bulkDeleteUsers(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { userIds } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      throw new ValidationError('User IDs array is required');
+    }
+
+    const result = await userService.bulkDeleteUsers(tenantId, userIds);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getUserProfile(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.params.id;
+
+    const profile = await userService.getUserProfile(userId, tenantId);
+    res.json({ success: true, data: profile });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateUserProfile(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.params.id;
+    const profileData = req.body;
+
+    const profile = await userService.updateUserProfile(userId, tenantId, profileData);
+    res.json({ success: true, data: profile });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getUserDashboard(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.params.id;
+
+    const dashboard = await userService.getUserDashboard(userId, tenantId);
+    res.json({ success: true, data: dashboard });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getUserSessions(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.params.id;
+
+    const sessions = await userService.getUserSessions(userId, tenantId);
+    res.json({ success: true, data: sessions });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function revokeUserSessions(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.params.id;
+
+    const result = await userService.revokeUserSessions(userId, tenantId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getUserPerformanceMetrics(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.params.id;
+    const { period } = req.query;
+
+    const metrics = await userService.getUserPerformanceMetrics(userId, tenantId, {
+      period: parseInt(period) || 30
+    });
+    res.json({ success: true, data: metrics });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCurrentUserProfile(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.user.id;
+
+    const profile = await userService.getUserProfile(userId, tenantId);
+    res.json({ success: true, data: profile });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateCurrentUserProfile(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.user.id;
+    const profileData = req.body;
+
+    const profile = await userService.updateUserProfile(userId, tenantId, profileData);
+    res.json({ success: true, data: profile });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCurrentUserDashboard(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.user.id;
+
+    const dashboard = await userService.getUserDashboard(userId, tenantId);
+    res.json({ success: true, data: dashboard });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCurrentUserSessions(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.user.id;
+
+    const sessions = await userService.getUserSessions(userId, tenantId);
+    res.json({ success: true, data: sessions });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function revokeCurrentUserSessions(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.user.id;
+
+    const result = await userService.revokeUserSessions(userId, tenantId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getUsers,
   getUserById,
@@ -245,5 +414,18 @@ module.exports = {
   updateUserPermissions,
   getCurrentUser,
   updateCurrentUser,
-  getUserStats
+  getUserStats,
+  bulkUpdateUsers,
+  bulkDeleteUsers,
+  getUserProfile,
+  updateUserProfile,
+  getUserDashboard,
+  getUserSessions,
+  revokeUserSessions,
+  getUserPerformanceMetrics,
+  getCurrentUserProfile,
+  updateCurrentUserProfile,
+  getCurrentUserDashboard,
+  getCurrentUserSessions,
+  revokeCurrentUserSessions
 };

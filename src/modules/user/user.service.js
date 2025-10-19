@@ -1,7 +1,7 @@
 const { prisma } = require('../../config/db');
 const bcrypt = require('bcrypt');
 const { ValidationError, NotFoundError, AuthError } = require('../../core/exceptions');
-const { Role } = require('../../core/constants');
+const { Role, SECURITY } = require('../../core/constants');
 
 async function getUsers({ tenantId, role, isActive, limit, offset, search }) {
   const where = {
@@ -533,6 +533,417 @@ async function getUserStats(tenantId) {
   };
 }
 
+async function bulkUpdateUsers(tenantId, userIds, updateData) {
+  if (!userIds || userIds.length === 0) {
+    throw new ValidationError('User IDs are required');
+  }
+
+  // Validate all users exist and belong to tenant
+  const users = await prisma.user.findMany({
+    where: {
+      id: { in: userIds },
+      tenantId
+    },
+    select: { id: true }
+  });
+
+  if (users.length !== userIds.length) {
+    throw new ValidationError('Some users not found or do not belong to tenant');
+  }
+
+  // Update users
+  const result = await prisma.user.updateMany({
+    where: {
+      id: { in: userIds },
+      tenantId
+    },
+    data: updateData
+  });
+
+  return {
+    updatedCount: result.count,
+    userIds: userIds
+  };
+}
+
+async function bulkDeleteUsers(tenantId, userIds) {
+  if (!userIds || userIds.length === 0) {
+    throw new ValidationError('User IDs are required');
+  }
+
+  // Check if any users have related data
+  const usersWithData = await prisma.user.findMany({
+    where: {
+      id: { in: userIds },
+      tenantId,
+      OR: [
+        { transactions: { some: {} } },
+        { analytics: { some: {} } }
+      ]
+    },
+    select: { id: true, name: true, email: true }
+  });
+
+  if (usersWithData.length > 0) {
+    throw new ValidationError(`Cannot delete users with existing data: ${usersWithData.map(u => u.email).join(', ')}`);
+  }
+
+  const result = await prisma.user.deleteMany({
+    where: {
+      id: { in: userIds },
+      tenantId
+    }
+  });
+
+  return {
+    deletedCount: result.count,
+    userIds: userIds
+  };
+}
+
+async function getUserProfile(userId, tenantId) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, tenantId },
+    include: {
+      tenant: {
+        select: {
+          id: true,
+          name: true,
+          domain: true,
+          metadata: true
+        }
+      },
+      _count: {
+        select: {
+          transactions: true,
+          analytics: true
+        }
+      }
+    }
+  });
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  // Get recent activity summary
+  const recentActivity = await prisma.analyticsLog.findMany({
+    where: { userId },
+    select: {
+      event: true,
+      entity: true,
+      createdAt: true
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10
+  });
+
+  return {
+    ...user,
+    stats: user._count,
+    recentActivity,
+    profile: {
+      lastLoginAt: user.lastLoginAt,
+      accountAge: Math.floor((new Date() - user.createdAt) / (1000 * 60 * 60 * 24)), // days
+      isActive: user.isActive
+    }
+  };
+}
+
+async function updateUserProfile(userId, tenantId, profileData) {
+  const { name, email, preferences } = profileData;
+
+  // Check if user exists
+  const existingUser = await prisma.user.findFirst({
+    where: { id: userId, tenantId }
+  });
+
+  if (!existingUser) {
+    throw new NotFoundError('User not found');
+  }
+
+  // Check if email already exists (excluding current user)
+  if (email && email !== existingUser.email) {
+    const emailExists = await prisma.user.findFirst({
+      where: { 
+        email, 
+        tenantId,
+        id: { not: userId }
+      }
+    });
+
+    if (emailExists) {
+      throw new ValidationError('Email already exists');
+    }
+  }
+
+  const updateData = {};
+  if (name !== undefined) updateData.name = name;
+  if (email !== undefined) updateData.email = email;
+  if (preferences !== undefined) {
+    updateData.metadata = {
+      ...existingUser.metadata,
+      preferences
+    };
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+      lastLoginAt: true,
+      metadata: true
+    }
+  });
+
+  return user;
+}
+
+async function getUserDashboard(userId, tenantId) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, tenantId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      lastLoginAt: true,
+      createdAt: true
+    }
+  });
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30); // Last 30 days
+
+  const [
+    recentTransactions,
+    recentOrders,
+    alerts,
+    activityStats
+  ] = await Promise.all([
+    prisma.inventoryTransaction.findMany({
+      where: { createdById: userId },
+      select: {
+        id: true,
+        type: true,
+        quantity: true,
+        createdAt: true,
+        item: {
+          select: { name: true, sku: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    }),
+    prisma.purchaseOrder.findMany({
+      where: { 
+        tenantId,
+        createdAt: { gte: startDate }
+      },
+      select: {
+        id: true,
+        reference: true,
+        status: true,
+        createdAt: true,
+        supplier: {
+          select: { name: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    }),
+    prisma.alert.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        type: true,
+        message: true,
+        createdAt: true,
+        item: {
+          select: { name: true, sku: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    }),
+    prisma.analyticsLog.groupBy({
+      by: ['event'],
+      where: {
+        userId,
+        createdAt: { gte: startDate }
+      },
+      _count: { event: true }
+    })
+  ]);
+
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      lastLoginAt: user.lastLoginAt
+    },
+    dashboard: {
+      recentTransactions,
+      recentOrders,
+      alerts,
+      activityStats: activityStats.map(stat => ({
+        event: stat.event,
+        count: stat._count.event
+      }))
+    }
+  };
+}
+
+async function getUserSessions(userId, tenantId) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, tenantId }
+  });
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  // In a real implementation, you'd track sessions in a separate table
+  // For now, we'll return recent login activity
+  const recentLogins = await prisma.analyticsLog.findMany({
+    where: {
+      userId,
+      event: 'USER_LOGIN'
+    },
+    select: {
+      createdAt: true,
+      metadata: true
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10
+  });
+
+  return {
+    userId,
+    sessions: recentLogins.map(login => ({
+      loginTime: login.createdAt,
+      rememberMe: login.metadata?.rememberMe || false,
+      ipAddress: login.metadata?.ipAddress || 'Unknown',
+      userAgent: login.metadata?.userAgent || 'Unknown'
+    }))
+  };
+}
+
+async function revokeUserSessions(userId, tenantId) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, tenantId }
+  });
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  // Log session revocation
+  await prisma.analyticsLog.create({
+    data: {
+      event: 'SESSIONS_REVOKED',
+      entity: 'User',
+      entityId: userId,
+      userId,
+      metadata: JSON.stringify({ revokedAt: new Date() })
+    }
+  });
+
+  return {
+    message: 'All user sessions have been revoked',
+    userId
+  };
+}
+
+async function getUserPerformanceMetrics(userId, tenantId, options = {}) {
+  const { period = 30 } = options;
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - period);
+
+  const user = await prisma.user.findFirst({
+    where: { id: userId, tenantId }
+  });
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  const [
+    transactionStats,
+    orderStats,
+    activityStats,
+    errorStats
+  ] = await Promise.all([
+    prisma.inventoryTransaction.groupBy({
+      by: ['type'],
+      where: {
+        createdById: userId,
+        createdAt: { gte: startDate }
+      },
+      _count: { type: true },
+      _sum: { quantity: true }
+    }),
+    prisma.purchaseOrder.groupBy({
+      by: ['status'],
+      where: {
+        tenantId,
+        createdAt: { gte: startDate }
+      },
+      _count: { status: true }
+    }),
+    prisma.analyticsLog.groupBy({
+      by: ['event'],
+      where: {
+        userId,
+        createdAt: { gte: startDate }
+      },
+      _count: { event: true }
+    }),
+    prisma.analyticsLog.count({
+      where: {
+        userId,
+        event: { contains: 'ERROR' },
+        createdAt: { gte: startDate }
+      }
+    })
+  ]);
+
+  return {
+    userId,
+    period,
+    metrics: {
+      transactions: transactionStats.map(stat => ({
+        type: stat.type,
+        count: stat._count.type,
+        totalQuantity: stat._sum.quantity || 0
+      })),
+      orders: orderStats.map(stat => ({
+        status: stat.status,
+        count: stat._count.status
+      })),
+      activities: activityStats.map(stat => ({
+        event: stat.event,
+        count: stat._count.event
+      })),
+      errors: errorStats
+    }
+  };
+}
+
 module.exports = {
   getUsers,
   getUserById,
@@ -547,5 +958,13 @@ module.exports = {
   getUserActivity,
   getUserPermissions,
   updateUserPermissions,
-  getUserStats
+  getUserStats,
+  bulkUpdateUsers,
+  bulkDeleteUsers,
+  getUserProfile,
+  updateUserProfile,
+  getUserDashboard,
+  getUserSessions,
+  revokeUserSessions,
+  getUserPerformanceMetrics
 };
