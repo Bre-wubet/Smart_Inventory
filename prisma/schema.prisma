@@ -88,6 +88,7 @@ model Tenant {
   warehouses     Warehouse[]
   recipes        Recipe[]
   items          Item[]
+  suppliers      Supplier[]
   purchaseOrders PurchaseOrder[]
   saleOrders     SaleOrder[]
   alerts         Alert[]
@@ -211,17 +212,30 @@ model StockMovement {
 // Suppliers & Procurement
 //////////////////////////
 model Supplier {
-  id          String         @id @default(cuid())
-  name        String
-  contact     String?
-  email       String?
-  phone       String?
-  address     String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id            String         @id @default(cuid())
+  name          String
+  contact       String?
+  email         String?
+  phone         String?
+  address       String?
+  website       String?
+  taxId         String?
+  paymentTerms  String?
+  currency      String?        @default("USD")
+  rating        Float?         @default(0)
+  notes         String?
+  isActive      Boolean        @default(true)
+  tenantId      String
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   items          ItemSupplier[]
   purchaseOrders PurchaseOrder[]
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([rating])
 }
 
 model ItemSupplier {
