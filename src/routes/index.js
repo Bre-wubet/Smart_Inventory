@@ -17,6 +17,7 @@ router.use('/recipe', require('../modules/recipe'));
 router.use('/supplier', require('../modules/supplier'));
 router.use('/purchase', require('../modules/purchase'));
 router.use('/sales', require('../modules/sales'));
+router.use('/customer', require('../modules/customer'));
 
 // Advanced modules
 router.use('/costing', require('../modules/costing'));

@@ -19,6 +19,19 @@ router.delete('/sale-orders/:id/cancel', salesController.cancelSaleOrder);
 router.post('/sale-orders/:id/fulfill', salesController.fulfillSaleOrder);
 router.get('/sale-orders/:id/items', salesController.getSaleOrderItems);
 
+// Enhanced sales analytics and management routes
+router.get('/sales/analytics', salesController.getSalesAnalytics);
+router.get('/sales/performance', salesController.getSalesPerformanceMetrics);
+router.get('/sales/top-items', salesController.getTopSellingItems);
+router.get('/sales/forecast', salesController.getSalesForecast);
+router.get('/sales/optimization-recommendations', salesController.getSalesOptimizationRecommendations);
+
+// Advanced sales analytics routes
+router.get('/sales/trends', salesController.getSalesTrendsAnalysis);
+router.get('/sales/customer-behavior', salesController.getCustomerBehaviorAnalysis);
+router.get('/sales/product-performance', salesController.getProductPerformanceAnalysis);
+router.get('/sales/insights', salesController.getSalesInsights);
+
 module.exports = router;
 
 
