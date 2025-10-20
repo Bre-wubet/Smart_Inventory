@@ -7,22 +7,11 @@
 
 const { ValidationError } = require('../exceptions');
 
-/**
- * Validate email format
- * @param {string} email - Email address to validate
- * @returns {boolean} True if valid email format
- */
 function isValidEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-/**
- * Validate phone number format
- * @param {string} phone - Phone number to validate
- * @param {string} format - Expected format (international, national, etc.)
- * @returns {boolean} True if valid phone format
- */
 function isValidPhone(phone, format = 'international') {
   if (!phone) return false;
   
@@ -40,12 +29,6 @@ function isValidPhone(phone, format = 'international') {
   }
 }
 
-/**
- * Validate SKU format
- * @param {string} sku - SKU to validate
- * @param {Object} rules - Validation rules
- * @returns {Object} Validation result
- */
 function validateSKU(sku, rules = {}) {
   const {
     minLength = 3,
@@ -81,12 +64,6 @@ function validateSKU(sku, rules = {}) {
   return { valid: true };
 }
 
-/**
- * Validate quantity
- * @param {any} quantity - Quantity to validate
- * @param {Object} rules - Validation rules
- * @returns {Object} Validation result
- */
 function validateQuantity(quantity, rules = {}) {
   const {
     min = 0,
@@ -125,12 +102,6 @@ function validateQuantity(quantity, rules = {}) {
   return { valid: true, value: num };
 }
 
-/**
- * Validate price
- * @param {any} price - Price to validate
- * @param {Object} rules - Validation rules
- * @returns {Object} Validation result
- */
 function validatePrice(price, rules = {}) {
   const {
     min = 0,
@@ -171,13 +142,6 @@ function validatePrice(price, rules = {}) {
   return { valid: true, value: parseFloat(num.toFixed(decimalPlaces)) };
 }
 
-/**
- * Validate date range
- * @param {Date|string} startDate - Start date
- * @param {Date|string} endDate - End date
- * @param {Object} rules - Validation rules
- * @returns {Object} Validation result
- */
 function validateDateRange(startDate, endDate, rules = {}) {
   const {
     allowSameDate = true,
@@ -229,12 +193,6 @@ function validateDateRange(startDate, endDate, rules = {}) {
   return { valid: true, startDate: start, endDate: end, rangeDays };
 }
 
-/**
- * Validate business rules for inventory operations
- * @param {Object} operation - Inventory operation data
- * @param {Object} rules - Business rules
- * @returns {Object} Validation result
- */
 function validateInventoryOperation(operation, rules = {}) {
   const {
     requirePositiveQuantity = true,
@@ -295,12 +253,6 @@ function validateInventoryOperation(operation, rules = {}) {
   };
 }
 
-/**
- * Validate user input for security
- * @param {string} input - User input to validate
- * @param {Object} rules - Security validation rules
- * @returns {Object} Validation result
- */
 function validateUserInput(input, rules = {}) {
   const {
     maxLength = 1000,
@@ -355,12 +307,6 @@ function validateUserInput(input, rules = {}) {
   };
 }
 
-/**
- * Validate file upload
- * @param {Object} file - File object to validate
- * @param {Object} rules - File validation rules
- * @returns {Object} Validation result
- */
 function validateFileUpload(file, rules = {}) {
   const {
     maxSize = 10 * 1024 * 1024, // 10MB default
@@ -406,12 +352,6 @@ function validateFileUpload(file, rules = {}) {
   };
 }
 
-/**
- * Validate pagination parameters
- * @param {Object} params - Pagination parameters
- * @param {Object} rules - Validation rules
- * @returns {Object} Validation result
- */
 function validatePagination(params, rules = {}) {
   const {
     maxLimit = 100,
@@ -452,11 +392,6 @@ function validatePagination(params, rules = {}) {
   };
 }
 
-/**
- * Validate tenant data
- * @param {Object} tenantData - Tenant data to validate
- * @returns {Object} Validation result
- */
 function validateTenantData(tenantData) {
   const errors = [];
 
@@ -488,22 +423,11 @@ function validateTenantData(tenantData) {
   };
 }
 
-/**
- * Validate domain format
- * @param {string} domain - Domain to validate
- * @returns {boolean} True if valid domain format
- */
 function isValidDomain(domain) {
   const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/;
   return domainRegex.test(domain);
 }
 
-/**
- * Comprehensive validation function
- * @param {Object} data - Data to validate
- * @param {Object} schema - Validation schema
- * @returns {Object} Validation result
- */
 function validate(data, schema) {
   const errors = [];
   const validatedData = {};

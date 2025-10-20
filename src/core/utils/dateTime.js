@@ -5,12 +5,6 @@
  * business calculations, reporting, and scheduling
  */
 
-/**
- * Format date to various formats
- * @param {Date|string} date - Date to format
- * @param {string} format - Format string (ISO, US, EU, custom)
- * @returns {string} Formatted date string
- */
 function formatDate(date, format = 'ISO') {
   const d = new Date(date);
   
@@ -55,13 +49,6 @@ function formatDate(date, format = 'ISO') {
   }
 }
 
-/**
- * Calculate date difference in various units
- * @param {Date|string} startDate - Start date
- * @param {Date|string} endDate - End date
- * @param {string} unit - Unit of measurement (days, hours, minutes, seconds)
- * @returns {number} Difference in specified unit
- */
 function calculateDateDifference(startDate, endDate, unit = 'days') {
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -94,13 +81,6 @@ function calculateDateDifference(startDate, endDate, unit = 'days') {
   }
 }
 
-/**
- * Add time to a date
- * @param {Date|string} date - Base date
- * @param {number} amount - Amount to add
- * @param {string} unit - Unit of time (days, hours, minutes, etc.)
- * @returns {Date} New date with time added
- */
 function addTime(date, amount, unit = 'days') {
   const d = new Date(date);
   
@@ -130,12 +110,6 @@ function addTime(date, amount, unit = 'days') {
   }
 }
 
-/**
- * Get start and end of various time periods
- * @param {Date|string} date - Reference date
- * @param {string} period - Time period (day, week, month, quarter, year)
- * @returns {Object} Object with start and end dates
- */
 function getPeriodBounds(date, period = 'day') {
   const d = new Date(date);
   
@@ -192,13 +166,6 @@ function getPeriodBounds(date, period = 'day') {
   }
 }
 
-/**
- * Calculate business days between two dates
- * @param {Date|string} startDate - Start date
- * @param {Date|string} endDate - End date
- * @param {Array} holidays - Array of holiday dates
- * @returns {number} Number of business days
- */
 function calculateBusinessDays(startDate, endDate, holidays = []) {
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -231,13 +198,6 @@ function calculateBusinessDays(startDate, endDate, holidays = []) {
   return businessDays;
 }
 
-/**
- * Generate date range array
- * @param {Date|string} startDate - Start date
- * @param {Date|string} endDate - End date
- * @param {string} interval - Interval (day, week, month, year)
- * @returns {Array} Array of dates
- */
 function generateDateRange(startDate, endDate, interval = 'day') {
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -270,13 +230,6 @@ function generateDateRange(startDate, endDate, interval = 'day') {
   return dates;
 }
 
-/**
- * Calculate age in various units
- * @param {Date|string} birthDate - Birth date
- * @param {Date|string} referenceDate - Reference date (defaults to now)
- * @param {string} unit - Unit of measurement
- * @returns {number} Age in specified unit
- */
 function calculateAge(birthDate, referenceDate = new Date(), unit = 'years') {
   const birth = new Date(birthDate);
   const reference = new Date(referenceDate);
@@ -292,12 +245,6 @@ function calculateAge(birthDate, referenceDate = new Date(), unit = 'years') {
   return calculateDateDifference(birth, reference, unit);
 }
 
-/**
- * Check if date is within business hours
- * @param {Date|string} date - Date to check
- * @param {Object} businessHours - Business hours configuration
- * @returns {boolean} True if within business hours
- */
 function isWithinBusinessHours(date, businessHours = {}) {
   const {
     startHour = 9,
@@ -325,12 +272,6 @@ function isWithinBusinessHours(date, businessHours = {}) {
          timeInMinutes <= endTimeInMinutes;
 }
 
-/**
- * Calculate next business day
- * @param {Date|string} date - Reference date
- * @param {Array} holidays - Array of holiday dates
- * @returns {Date} Next business day
- */
 function getNextBusinessDay(date, holidays = []) {
   const d = new Date(date);
   
@@ -348,12 +289,6 @@ function getNextBusinessDay(date, holidays = []) {
   return d;
 }
 
-/**
- * Calculate previous business day
- * @param {Date|string} date - Reference date
- * @param {Array} holidays - Array of holiday dates
- * @returns {Date} Previous business day
- */
 function getPreviousBusinessDay(date, holidays = []) {
   const d = new Date(date);
   
@@ -371,12 +306,6 @@ function getPreviousBusinessDay(date, holidays = []) {
   return d;
 }
 
-/**
- * Get timezone offset information
- * @param {Date|string} date - Reference date
- * @param {string} timezone - Timezone identifier
- * @returns {Object} Timezone offset information
- */
 function getTimezoneOffset(date, timezone = 'UTC') {
   const d = new Date(date);
   
@@ -399,12 +328,6 @@ function getTimezoneOffset(date, timezone = 'UTC') {
   };
 }
 
-/**
- * Calculate fiscal year information
- * @param {Date|string} date - Reference date
- * @param {number} fiscalYearStartMonth - Month when fiscal year starts (0-11)
- * @returns {Object} Fiscal year information
- */
 function getFiscalYear(date, fiscalYearStartMonth = 0) {
   const d = new Date(date);
   
@@ -432,13 +355,6 @@ function getFiscalYear(date, fiscalYearStartMonth = 0) {
   };
 }
 
-/**
- * Calculate working hours between two dates
- * @param {Date|string} startDate - Start date
- * @param {Date|string} endDate - End date
- * @param {Object} businessHours - Business hours configuration
- * @returns {number} Working hours
- */
 function calculateWorkingHours(startDate, endDate, businessHours = {}) {
   const {
     startHour = 9,

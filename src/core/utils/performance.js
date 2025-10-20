@@ -85,12 +85,6 @@ class MemoryCache {
 // Global cache instance
 const globalCache = new MemoryCache();
 
-/**
- * Cache decorator for functions
- * @param {Function} fn - Function to cache
- * @param {Object} options - Cache options
- * @returns {Function} Cached function
- */
 function cache(fn, options = {}) {
   const {
     ttl = 300000,
@@ -112,12 +106,6 @@ function cache(fn, options = {}) {
   };
 }
 
-/**
- * Performance monitoring decorator
- * @param {Function} fn - Function to monitor
- * @param {Object} options - Monitoring options
- * @returns {Function} Monitored function
- */
 function monitorPerformance(fn, options = {}) {
   const {
     logThreshold = 1000, // Log if execution takes more than 1 second
@@ -164,12 +152,6 @@ function monitorPerformance(fn, options = {}) {
   };
 }
 
-/**
- * Retry mechanism with exponential backoff
- * @param {Function} fn - Function to retry
- * @param {Object} options - Retry options
- * @returns {Function} Function with retry logic
- */
 function withRetry(fn, options = {}) {
   const {
     maxRetries = 3,
@@ -205,13 +187,6 @@ function withRetry(fn, options = {}) {
   };
 }
 
-/**
- * Batch processing utility
- * @param {Array} items - Items to process
- * @param {Function} processor - Processing function
- * @param {Object} options - Batch options
- * @returns {Array} Processed results
- */
 async function processBatch(items, processor, options = {}) {
   const {
     batchSize = 10,
@@ -246,12 +221,6 @@ async function processBatch(items, processor, options = {}) {
   return results;
 }
 
-/**
- * Debounce function
- * @param {Function} fn - Function to debounce
- * @param {number} delay - Delay in milliseconds
- * @returns {Function} Debounced function
- */
 function debounce(fn, delay) {
   let timeoutId;
   
@@ -261,12 +230,6 @@ function debounce(fn, delay) {
   };
 }
 
-/**
- * Throttle function
- * @param {Function} fn - Function to throttle
- * @param {number} limit - Time limit in milliseconds
- * @returns {Function} Throttled function
- */
 function throttle(fn, limit) {
   let inThrottle;
   
@@ -279,10 +242,6 @@ function throttle(fn, limit) {
   };
 }
 
-/**
- * Memory usage monitoring
- * @returns {Object} Memory usage information
- */
 function getMemoryUsage() {
   const usage = process.memoryUsage();
   
@@ -295,10 +254,6 @@ function getMemoryUsage() {
   };
 }
 
-/**
- * CPU usage monitoring
- * @returns {Promise<Object>} CPU usage information
- */
 async function getCPUUsage() {
   const startUsage = process.cpuUsage();
   
@@ -317,12 +272,6 @@ async function getCPUUsage() {
   });
 }
 
-/**
- * Database query optimization helper
- * @param {Object} query - Database query object
- * @param {Object} options - Optimization options
- * @returns {Object} Optimized query
- */
 function optimizeQuery(query, options = {}) {
   const {
     maxLimit = 1000,
@@ -358,12 +307,6 @@ function optimizeQuery(query, options = {}) {
   return optimized;
 }
 
-/**
- * Response compression helper
- * @param {Object} data - Data to compress
- * @param {Object} options - Compression options
- * @returns {Object} Compressed response
- */
 function compressResponse(data, options = {}) {
   const {
     maxSize = 1024, // 1KB
@@ -398,11 +341,6 @@ function compressResponse(data, options = {}) {
   };
 }
 
-/**
- * Remove null values from object
- * @param {Object} obj - Object to clean
- * @returns {Object} Cleaned object
- */
 function removeNullValues(obj) {
   if (Array.isArray(obj)) {
     return obj.map(removeNullValues).filter(item => item !== null);
@@ -421,11 +359,6 @@ function removeNullValues(obj) {
   return obj;
 }
 
-/**
- * Remove empty arrays from object
- * @param {Object} obj - Object to clean
- * @returns {Object} Cleaned object
- */
 function removeEmptyArrays(obj) {
   if (Array.isArray(obj)) {
     return obj.map(removeEmptyArrays).filter(item => 
@@ -446,9 +379,6 @@ function removeEmptyArrays(obj) {
   return obj;
 }
 
-/**
- * Performance metrics collector
- */
 class PerformanceMetrics {
   constructor() {
     this.metrics = new Map();
@@ -513,11 +443,6 @@ class PerformanceMetrics {
 // Global performance metrics instance
 const globalMetrics = new PerformanceMetrics();
 
-/**
- * Database connection pool monitoring
- * @param {Object} pool - Database connection pool
- * @returns {Object} Pool statistics
- */
 function getPoolStats(pool) {
   if (!pool || typeof pool !== 'object') {
     return null;
@@ -534,12 +459,6 @@ function getPoolStats(pool) {
   };
 }
 
-/**
- * Rate limiting helper
- * @param {string} key - Rate limit key
- * @param {Object} options - Rate limit options
- * @returns {boolean} True if request is allowed
- */
 function checkRateLimit(key, options = {}) {
   const {
     windowMs = 60000, // 1 minute

@@ -1,10 +1,5 @@
 const { COST_CALCULATION } = require('../constants');
 
-/**
- * Calculate total cost for a recipe based on its ingredients
- * @param {Array} recipeItems - Array of recipe items with quantity and item cost
- * @returns {number} Total cost
- */
 function calculateRecipeCost(recipeItems) {
   return recipeItems.reduce((total, item) => {
     const itemCost = parseFloat(item.item.cost || 0);
@@ -13,33 +8,16 @@ function calculateRecipeCost(recipeItems) {
   }, 0);
 }
 
-/**
- * Calculate cost per unit for a production batch
- * @param {number} totalCost - Total cost of the batch
- * @param {number} quantity - Quantity produced
- * @returns {number} Cost per unit
- */
 function calculateCostPerUnit(totalCost, quantity) {
   if (quantity <= 0) return 0;
   return parseFloat((totalCost / quantity).toFixed(COST_CALCULATION.DECIMAL_PRECISION));
 }
 
-/**
- * Calculate profit margin
- * @param {number} sellingPrice - Selling price per unit
- * @param {number} costPrice - Cost price per unit
- * @returns {number} Profit margin percentage
- */
 function calculateProfitMargin(sellingPrice, costPrice) {
   if (costPrice <= 0) return 0;
   return parseFloat((((sellingPrice - costPrice) / costPrice) * 100).toFixed(2));
 }
 
-/**
- * Calculate weighted average cost for inventory valuation
- * @param {Array} transactions - Array of inventory transactions
- * @returns {number} Weighted average cost
- */
 function calculateWeightedAverageCost(transactions) {
   let totalCost = 0;
   let totalQuantity = 0;
@@ -57,25 +35,13 @@ function calculateWeightedAverageCost(transactions) {
   return totalQuantity > 0 ? parseFloat((totalCost / totalQuantity).toFixed(COST_CALCULATION.DECIMAL_PRECISION)) : 0;
 }
 
-/**
- * Calculate reorder point based on consumption patterns
- * @param {number} averageConsumption - Average daily consumption
- * @param {number} leadTime - Lead time in days
- * @param {number} safetyStock - Safety stock percentage
- * @returns {number} Reorder point
- */
 function calculateReorderPoint(averageConsumption, leadTime, safetyStock = 0.2) {
   const leadTimeConsumption = averageConsumption * leadTime;
   const safetyStockAmount = leadTimeConsumption * safetyStock;
   return Math.ceil(leadTimeConsumption + safetyStockAmount);
 }
 
-/**
- * Calculate FIFO (First In, First Out) cost
- * @param {Array} inventoryLayers - Array of inventory layers with quantities and costs
- * @param {number} quantityToConsume - Quantity to consume
- * @returns {Object} FIFO cost calculation result
- */
+
 function calculateFIFOCost(inventoryLayers, quantityToConsume) {
   let remainingQuantity = quantityToConsume;
   let totalCost = 0;
@@ -110,12 +76,6 @@ function calculateFIFOCost(inventoryLayers, quantityToConsume) {
   };
 }
 
-/**
- * Calculate LIFO (Last In, First Out) cost
- * @param {Array} inventoryLayers - Array of inventory layers with quantities and costs
- * @param {number} quantityToConsume - Quantity to consume
- * @returns {Object} LIFO cost calculation result
- */
 function calculateLIFOCost(inventoryLayers, quantityToConsume) {
   let remainingQuantity = quantityToConsume;
   let totalCost = 0;
@@ -150,13 +110,6 @@ function calculateLIFOCost(inventoryLayers, quantityToConsume) {
   };
 }
 
-/**
- * Calculate standard cost variance
- * @param {number} standardCost - Standard cost per unit
- * @param {number} actualCost - Actual cost per unit
- * @param {number} quantity - Quantity produced/consumed
- * @returns {Object} Cost variance analysis
- */
 function calculateCostVariance(standardCost, actualCost, quantity) {
   const standardTotal = standardCost * quantity;
   const actualTotal = actualCost * quantity;
@@ -175,12 +128,6 @@ function calculateCostVariance(standardCost, actualCost, quantity) {
   };
 }
 
-/**
- * Calculate activity-based costing (ABC) allocation
- * @param {Array} activities - Array of activities with costs and drivers
- * @param {Array} costObjects - Array of cost objects with driver consumption
- * @returns {Object} ABC allocation result
- */
 function calculateABCCost(activities, costObjects) {
   const totalDriverUnits = activities.reduce((sum, activity) => sum + activity.driverUnits, 0);
   const driverRates = {};
@@ -224,13 +171,6 @@ function calculateABCCost(activities, costObjects) {
   };
 }
 
-/**
- * Calculate break-even point
- * @param {number} fixedCosts - Total fixed costs
- * @param {number} sellingPrice - Selling price per unit
- * @param {number} variableCostPerUnit - Variable cost per unit
- * @returns {Object} Break-even analysis
- */
 function calculateBreakEvenPoint(fixedCosts, sellingPrice, variableCostPerUnit) {
   const contributionMargin = sellingPrice - variableCostPerUnit;
   const breakEvenUnits = contributionMargin > 0 ? fixedCosts / contributionMargin : 0;
@@ -244,13 +184,6 @@ function calculateBreakEvenPoint(fixedCosts, sellingPrice, variableCostPerUnit) 
   };
 }
 
-/**
- * Calculate target costing
- * @param {number} targetPrice - Target selling price
- * @param {number} targetProfitMargin - Target profit margin percentage
- * @param {number} marketShare - Expected market share percentage
- * @returns {Object} Target costing analysis
- */
 function calculateTargetCost(targetPrice, targetProfitMargin, marketShare = 100) {
   const targetProfit = (targetPrice * targetProfitMargin) / 100;
   const targetCost = targetPrice - targetProfit;
@@ -265,11 +198,6 @@ function calculateTargetCost(targetPrice, targetProfitMargin, marketShare = 100)
   };
 }
 
-/**
- * Calculate total cost of ownership (TCO)
- * @param {Object} tcoData - TCO calculation data
- * @returns {Object} TCO analysis
- */
 function calculateTCO(tcoData) {
   const {
     acquisitionCost = 0,

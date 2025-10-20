@@ -5,13 +5,6 @@
  * and monetary formatting functions
  */
 
-/**
- * Format currency amount
- * @param {number} amount - Amount to format
- * @param {string} currency - Currency code (USD, EUR, etc.)
- * @param {Object} options - Formatting options
- * @returns {string} Formatted currency string
- */
 function formatCurrency(amount, currency = 'USD', options = {}) {
   const {
     locale = 'en-US',
@@ -34,14 +27,6 @@ function formatCurrency(amount, currency = 'USD', options = {}) {
   return formatter.format(amount);
 }
 
-/**
- * Convert currency amount
- * @param {number} amount - Amount to convert
- * @param {string} fromCurrency - Source currency
- * @param {string} toCurrency - Target currency
- * @param {number} exchangeRate - Exchange rate
- * @returns {number} Converted amount
- */
 function convertCurrency(amount, fromCurrency, toCurrency, exchangeRate) {
   if (isNaN(amount) || isNaN(exchangeRate)) {
     throw new Error('Invalid amount or exchange rate');
@@ -54,14 +39,6 @@ function convertCurrency(amount, fromCurrency, toCurrency, exchangeRate) {
   return parseFloat((amount * exchangeRate).toFixed(2));
 }
 
-/**
- * Calculate compound interest
- * @param {number} principal - Principal amount
- * @param {number} rate - Annual interest rate (as decimal)
- * @param {number} time - Time period in years
- * @param {number} compoundFrequency - Compounding frequency per year
- * @returns {Object} Compound interest calculation result
- */
 function calculateCompoundInterest(principal, rate, time, compoundFrequency = 12) {
   if (principal <= 0 || rate < 0 || time <= 0 || compoundFrequency <= 0) {
     throw new Error('Invalid parameters for compound interest calculation');
@@ -81,13 +58,6 @@ function calculateCompoundInterest(principal, rate, time, compoundFrequency = 12
   };
 }
 
-/**
- * Calculate present value
- * @param {number} futureValue - Future value
- * @param {number} rate - Discount rate (as decimal)
- * @param {number} time - Time period in years
- * @returns {number} Present value
- */
 function calculatePresentValue(futureValue, rate, time) {
   if (futureValue <= 0 || rate < 0 || time <= 0) {
     throw new Error('Invalid parameters for present value calculation');
@@ -96,13 +66,6 @@ function calculatePresentValue(futureValue, rate, time) {
   return parseFloat((futureValue / Math.pow(1 + rate, time)).toFixed(2));
 }
 
-/**
- * Calculate future value
- * @param {number} presentValue - Present value
- * @param {number} rate - Interest rate (as decimal)
- * @param {number} time - Time period in years
- * @returns {number} Future value
- */
 function calculateFutureValue(presentValue, rate, time) {
   if (presentValue <= 0 || rate < 0 || time <= 0) {
     throw new Error('Invalid parameters for future value calculation');
@@ -111,14 +74,6 @@ function calculateFutureValue(presentValue, rate, time) {
   return parseFloat((presentValue * Math.pow(1 + rate, time)).toFixed(2));
 }
 
-/**
- * Calculate loan payment (PMT)
- * @param {number} principal - Loan principal
- * @param {number} rate - Annual interest rate (as decimal)
- * @param {number} time - Loan term in years
- * @param {number} paymentFrequency - Payment frequency per year
- * @returns {Object} Loan payment calculation result
- */
 function calculateLoanPayment(principal, rate, time, paymentFrequency = 12) {
   if (principal <= 0 || rate < 0 || time <= 0 || paymentFrequency <= 0) {
     throw new Error('Invalid parameters for loan payment calculation');
@@ -150,12 +105,6 @@ function calculateLoanPayment(principal, rate, time, paymentFrequency = 12) {
   };
 }
 
-/**
- * Calculate net present value (NPV)
- * @param {Array} cashFlows - Array of cash flows
- * @param {number} discountRate - Discount rate (as decimal)
- * @returns {number} Net present value
- */
 function calculateNPV(cashFlows, discountRate) {
   if (!Array.isArray(cashFlows) || cashFlows.length === 0) {
     throw new Error('Cash flows array is required');
@@ -178,12 +127,6 @@ function calculateNPV(cashFlows, discountRate) {
   return parseFloat(npv.toFixed(2));
 }
 
-/**
- * Calculate internal rate of return (IRR)
- * @param {Array} cashFlows - Array of cash flows
- * @param {number} guess - Initial guess for IRR (optional)
- * @returns {number} Internal rate of return
- */
 function calculateIRR(cashFlows, guess = 0.1) {
   if (!Array.isArray(cashFlows) || cashFlows.length < 2) {
     throw new Error('At least 2 cash flows are required for IRR calculation');
@@ -214,12 +157,6 @@ function calculateIRR(cashFlows, guess = 0.1) {
   return parseFloat((rate * 100).toFixed(2));
 }
 
-/**
- * Calculate payback period
- * @param {Array} cashFlows - Array of cash flows
- * @param {number} initialInvestment - Initial investment amount
- * @returns {Object} Payback period calculation result
- */
 function calculatePaybackPeriod(cashFlows, initialInvestment) {
   if (!Array.isArray(cashFlows) || cashFlows.length === 0) {
     throw new Error('Cash flows array is required');
@@ -255,14 +192,6 @@ function calculatePaybackPeriod(cashFlows, initialInvestment) {
   };
 }
 
-/**
- * Calculate depreciation using various methods
- * @param {number} cost - Asset cost
- * @param {number} salvageValue - Salvage value
- * @param {number} usefulLife - Useful life in years
- * @param {string} method - Depreciation method (straight-line, declining-balance, sum-of-years)
- * @returns {Object} Depreciation calculation result
- */
 function calculateDepreciation(cost, salvageValue, usefulLife, method = 'straight-line') {
   if (cost <= 0 || usefulLife <= 0) {
     throw new Error('Invalid parameters for depreciation calculation');
@@ -330,11 +259,6 @@ function calculateDepreciation(cost, salvageValue, usefulLife, method = 'straigh
   };
 }
 
-/**
- * Calculate financial ratios
- * @param {Object} financialData - Financial statement data
- * @returns {Object} Financial ratios
- */
 function calculateFinancialRatios(financialData) {
   const {
     currentAssets = 0,
@@ -374,11 +298,6 @@ function calculateFinancialRatios(financialData) {
   return ratios;
 }
 
-/**
- * Calculate weighted average cost of capital (WACC)
- * @param {Object} waccData - WACC calculation data
- * @returns {Object} WACC calculation result
- */
 function calculateWACC(waccData) {
   const {
     equityValue = 0,
@@ -414,14 +333,6 @@ function calculateWACC(waccData) {
   };
 }
 
-/**
- * Calculate price elasticity of demand
- * @param {number} initialQuantity - Initial quantity demanded
- * @param {number} finalQuantity - Final quantity demanded
- * @param {number} initialPrice - Initial price
- * @param {number} finalPrice - Final price
- * @returns {Object} Price elasticity calculation result
- */
 function calculatePriceElasticity(initialQuantity, finalQuantity, initialPrice, finalPrice) {
   if (initialQuantity <= 0 || initialPrice <= 0) {
     throw new Error('Initial quantity and price must be positive');
