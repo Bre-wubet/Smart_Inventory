@@ -3,6 +3,7 @@ const { ValidationError, NotFoundError } = require('../../core/exceptions');
 const { SOStatus, TransactionType } = require('../../core/constants');
 const inventoryTransactionService = require('../../core/services/inventoryTransaction.service');
 const { calculateStockTurnover, calculateDaysOfInventory } = require('../../core/utils/stockFormulas');
+const { integrationManager } = require('../../integrations');
 
 async function createSaleOrder(saleOrderData) {
   const { customer, items, reference, tenantId } = saleOrderData;
@@ -51,6 +52,22 @@ async function createSaleOrder(saleOrderData) {
       }
     }
   });
+
+  // Publish sales order created event
+  try {
+    await integrationManager.publishEvent('sales-events', 'sales.order.created', {
+      tenantId,
+      orderId: saleOrder.id,
+      customerId: customer,
+      totalAmount: saleOrder.totalAmount,
+      currency: 'USD',
+      status: saleOrder.status,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    // Log error but don't fail the order creation
+    console.warn('Failed to publish sales order event:', error.message);
+  }
 
   return saleOrder;
 }

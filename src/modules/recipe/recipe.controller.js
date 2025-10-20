@@ -167,6 +167,180 @@ async function getProductionBatchById(req, res, next) {
   }
 }
 
+// Advanced Recipe Analytics Controllers
+async function getRecipeAnalyticsDashboard(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      groupBy = 'month' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (groupBy) options.groupBy = groupBy;
+
+    const dashboard = await recipeService.getRecipeAnalyticsDashboard(tenantId, options);
+    res.json({ success: true, data: dashboard });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getRecipeOptimizationRecommendations(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      focus = 'all' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (focus) options.focus = focus;
+
+    const recommendations = await recipeService.getRecipeOptimizationRecommendations(tenantId, options);
+    res.json({ success: true, data: recommendations });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getRecipeScalingAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { id } = req.params;
+    const { targetQuantity } = req.query;
+
+    if (!targetQuantity) {
+      throw new ValidationError('targetQuantity is required');
+    }
+
+    const analysis = await recipeService.getRecipeScalingAnalysis(tenantId, id, parseFloat(targetQuantity));
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getProductionPlanningAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      recipeId,
+      priority = 'cost' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (recipeId) options.recipeId = recipeId;
+    if (priority) options.priority = priority;
+
+    const analysis = await recipeService.getProductionPlanningAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Advanced Recipe Analytics Service Controllers
+async function getRecipePerformanceAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      recipeId,
+      groupBy = 'recipe' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (recipeId) options.recipeId = recipeId;
+    if (groupBy) options.groupBy = groupBy;
+
+    const recipeAnalyticsService = require('./recipe-analytics.service');
+    const analysis = await recipeAnalyticsService.getRecipePerformanceAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getIngredientUtilizationAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      recipeId 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (recipeId) options.recipeId = recipeId;
+
+    const recipeAnalyticsService = require('./recipe-analytics.service');
+    const analysis = await recipeAnalyticsService.getIngredientUtilizationAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getRecipeCostBreakdownAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      recipeId 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (recipeId) options.recipeId = recipeId;
+
+    const recipeAnalyticsService = require('./recipe-analytics.service');
+    const analysis = await recipeAnalyticsService.getRecipeCostBreakdownAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getProductionEfficiencyAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      recipeId 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (recipeId) options.recipeId = recipeId;
+
+    const recipeAnalyticsService = require('./recipe-analytics.service');
+    const analysis = await recipeAnalyticsService.getProductionEfficiencyAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createRecipe,
   getRecipes,
@@ -176,5 +350,15 @@ module.exports = {
   calculateRecipeCost,
   createProductionBatch,
   getProductionBatches,
-  getProductionBatchById
+  getProductionBatchById,
+  // Advanced Analytics Controllers
+  getRecipeAnalyticsDashboard,
+  getRecipeOptimizationRecommendations,
+  getRecipeScalingAnalysis,
+  getProductionPlanningAnalysis,
+  // Advanced Analytics Service Controllers
+  getRecipePerformanceAnalysis,
+  getIngredientUtilizationAnalysis,
+  getRecipeCostBreakdownAnalysis,
+  getProductionEfficiencyAnalysis
 };

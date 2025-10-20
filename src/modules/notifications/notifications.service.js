@@ -2,6 +2,7 @@ const { prisma } = require('../../config/db');
 const { ValidationError, NotFoundError } = require('../../core/exceptions');
 const { AlertType } = require('../../core/constants');
 const { isLowStock, isOverstocked } = require('../../core/utils/stockFormulas');
+const { integrationManager } = require('../../integrations');
 
 async function getAlerts({ tenantId, type, status, limit, offset }) {
   const where = {
@@ -582,6 +583,197 @@ async function generateAlertReport({ tenantId, startDate, endDate, alertTypes })
   };
 }
 
+async function sendAlertNotifications(alert, tenantId) {
+  try {
+    // Get notification recipients for the tenant
+    const recipients = await getNotificationRecipients(tenantId);
+    
+    if (recipients.length === 0) {
+      return { success: false, message: 'No notification recipients found' };
+    }
+
+    // Send notifications using integration manager
+    const result = await integrationManager.sendNotification({
+      type: 'email',
+      recipients,
+      template: getAlertTemplate(alert.type),
+      data: formatAlertData(alert),
+      priority: alert.priority === 'HIGH' ? 'high' : 'normal',
+      fallbackServices: ['sms']
+    });
+
+    // Update alert status to indicate notifications sent
+    await prisma.alert.update({
+      where: { id: alert.id },
+      data: { 
+        status: 'NOTIFIED',
+        notifiedAt: new Date()
+      }
+    });
+
+    return {
+      success: true,
+      notificationResult: result,
+      recipientCount: recipients.length
+    };
+
+  } catch (error) {
+    logger.error({
+      error: error.message,
+      alertId: alert.id,
+      tenantId
+    }, 'Failed to send alert notifications');
+    throw error;
+  }
+}
+
+async function getNotificationRecipients(tenantId) {
+  // Get users who should receive notifications for this tenant
+  const users = await prisma.user.findMany({
+    where: {
+      tenantId,
+      isActive: true,
+      notificationSettings: {
+        some: {
+          emailNotifications: true
+        }
+      }
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      notificationSettings: {
+        select: {
+          emailNotifications: true,
+          smsNotifications: true
+        }
+      }
+    }
+  });
+
+  return users.map(user => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    emailEnabled: user.notificationSettings?.[0]?.emailNotifications || false,
+    smsEnabled: user.notificationSettings?.[0]?.smsNotifications || false
+  }));
+}
+
+function getAlertTemplate(alertType) {
+  const templateMap = {
+    'LOW_STOCK': 'low_stock_alert',
+    'EXPIRY': 'expiry_alert',
+    'OVERSTOCK': 'low_stock_alert',
+    'REORDER': 'low_stock_alert'
+  };
+
+  return templateMap[alertType] || 'custom';
+}
+
+function formatAlertData(alert) {
+  return {
+    itemName: alert.item?.name || 'Unknown Item',
+    itemSku: alert.item?.sku || 'N/A',
+    warehouseName: alert.warehouse?.name || 'Unknown Warehouse',
+    currentStock: alert.currentStock || 'N/A',
+    reorderPoint: alert.reorderPoint || 'N/A',
+    unit: alert.item?.unit || 'units',
+    expiryDate: alert.expiryDate ? new Date(alert.expiryDate).toLocaleDateString() : 'N/A',
+    daysUntilExpiry: alert.daysUntilExpiry || 'N/A',
+    alertType: alert.type,
+    priority: alert.priority,
+    message: alert.message
+  };
+}
+
+async function sendDailyReport(tenantId, reportData) {
+  try {
+    const recipients = await getNotificationRecipients(tenantId);
+    
+    if (recipients.length === 0) {
+      return { success: false, message: 'No notification recipients found' };
+    }
+
+    const result = await integrationManager.sendNotification({
+      type: 'email',
+      recipients,
+      template: 'daily_report',
+      data: {
+        ...reportData,
+        date: new Date().toLocaleDateString()
+      },
+      priority: 'normal'
+    });
+
+    return {
+      success: true,
+      notificationResult: result,
+      recipientCount: recipients.length
+    };
+
+  } catch (error) {
+    logger.error({
+      error: error.message,
+      tenantId
+    }, 'Failed to send daily report');
+    throw error;
+  }
+}
+
+async function sendOrderNotification(order, orderType, tenantId) {
+  try {
+    const recipients = await getNotificationRecipients(tenantId);
+    
+    if (recipients.length === 0) {
+      return { success: false, message: 'No notification recipients found' };
+    }
+
+    const template = orderType === 'purchase' ? 'purchase_order_created' : 'sales_order_created';
+    const data = formatOrderData(order, orderType);
+
+    const result = await integrationManager.sendNotification({
+      type: 'email',
+      recipients,
+      template,
+      data,
+      priority: 'normal',
+      fallbackServices: ['sms']
+    });
+
+    return {
+      success: true,
+      notificationResult: result,
+      recipientCount: recipients.length
+    };
+
+  } catch (error) {
+    logger.error({
+      error: error.message,
+      orderId: order.id,
+      orderType,
+      tenantId
+    }, 'Failed to send order notification');
+    throw error;
+  }
+}
+
+function formatOrderData(order, orderType) {
+  return {
+    orderReference: order.reference || order.id,
+    supplierName: order.supplier?.name || 'Unknown Supplier',
+    customerName: order.customer || 'Unknown Customer',
+    totalAmount: order.totalAmount || '0.00',
+    currency: order.currency || 'USD',
+    expectedDate: order.expectedDate ? new Date(order.expectedDate).toLocaleDateString() : 'N/A',
+    deliveryDate: order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'N/A',
+    status: order.status || 'PENDING'
+  };
+}
+
 module.exports = {
   getAlerts,
   getAlertById,
@@ -597,5 +789,10 @@ module.exports = {
   getOverstockAlerts,
   getPurchaseOrderAlerts,
   getSalesOrderAlerts,
-  generateAlertReport
+  generateAlertReport,
+  // Integration functions
+  sendAlertNotifications,
+  sendDailyReport,
+  sendOrderNotification,
+  getNotificationRecipients
 };

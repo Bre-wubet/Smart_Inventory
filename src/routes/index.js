@@ -26,6 +26,9 @@ router.use('/user', require('../modules/user'));
 router.use('/tenant', require('../modules/tenant'));
 router.use('/analytics', require('../modules/analytics'));
 
+// Integration management
+router.use('/integrations', require('../modules/integrations'));
+
 router.use((req, res, next) => next(new NotFoundError('Route not found')));
 
 module.exports = router;

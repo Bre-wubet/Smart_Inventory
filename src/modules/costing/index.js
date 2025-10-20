@@ -25,4 +25,16 @@ router.get('/supplier-comparison/:id', costingController.getSupplierCostComparis
 // Report generation
 router.post('/reports', costingController.generateCostReport);
 
+// Advanced Cost Analytics routes
+router.get('/analytics/dashboard', costingController.getCostAnalyticsDashboard);
+router.get('/analytics/optimization-recommendations', costingController.getCostOptimizationRecommendations);
+router.get('/analytics/forecast', costingController.getCostForecast);
+router.get('/analytics/benchmarking', costingController.getCostBenchmarking);
+
+// Advanced Cost Analytics Service routes
+router.get('/analytics/variance-analysis', costingController.getCostVarianceAnalysis);
+router.get('/analytics/cost-center-analysis', costingController.getCostCenterAnalysis);
+router.get('/analytics/cost-impact-analysis', costingController.getCostImpactAnalysis);
+router.get('/analytics/optimization-opportunities', costingController.getCostOptimizationOpportunities);
+
 module.exports = router;

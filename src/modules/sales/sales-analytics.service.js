@@ -387,7 +387,7 @@ async function analyzeProductPerformance(tenantId, options = {}) {
     },
     period: { startDate, endDate }
   };
-}
+} 
 
 function calculateVariance(values) {
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;

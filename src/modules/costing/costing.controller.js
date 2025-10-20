@@ -167,6 +167,184 @@ async function generateCostReport(req, res, next) {
   }
 }
 
+// Advanced Cost Analytics Controllers
+async function getCostAnalyticsDashboard(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      groupBy = 'month' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (groupBy) options.groupBy = groupBy;
+
+    const dashboard = await costingService.getCostAnalyticsDashboard(tenantId, options);
+    res.json({ success: true, data: dashboard });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCostOptimizationRecommendations(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      focus = 'all' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (focus) options.focus = focus;
+
+    const recommendations = await costingService.getCostOptimizationRecommendations(tenantId, options);
+    res.json({ success: true, data: recommendations });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCostForecast(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      forecastPeriod = '30', 
+      confidenceLevel = '95',
+      itemId,
+      category 
+    } = req.query;
+
+    const options = {};
+    if (forecastPeriod) options.forecastPeriod = parseInt(forecastPeriod);
+    if (confidenceLevel) options.confidenceLevel = parseInt(confidenceLevel);
+    if (itemId) options.itemId = itemId;
+    if (category) options.category = category;
+
+    const forecast = await costingService.getCostForecast(tenantId, options);
+    res.json({ success: true, data: forecast });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCostBenchmarking(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      benchmarkType = 'industry',
+      category,
+      itemId 
+    } = req.query;
+
+    const options = {};
+    if (benchmarkType) options.benchmarkType = benchmarkType;
+    if (category) options.category = category;
+    if (itemId) options.itemId = itemId;
+
+    const benchmarking = await costingService.getCostBenchmarking(tenantId, options);
+    res.json({ success: true, data: benchmarking });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Advanced Cost Analytics Service Controllers
+async function getCostVarianceAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      itemId,
+      category 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (itemId) options.itemId = itemId;
+    if (category) options.category = category;
+
+    const costingAnalyticsService = require('./costing-analytics.service');
+    const analysis = await costingAnalyticsService.getCostVarianceAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCostCenterAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      groupBy = 'category' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (groupBy) options.groupBy = groupBy;
+
+    const costingAnalyticsService = require('./costing-analytics.service');
+    const analysis = await costingAnalyticsService.getCostCenterAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCostImpactAnalysis(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      impactType = 'profit' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (impactType) options.impactType = impactType;
+
+    const costingAnalyticsService = require('./costing-analytics.service');
+    const analysis = await costingAnalyticsService.getCostImpactAnalysis(tenantId, options);
+    res.json({ success: true, data: analysis });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getCostOptimizationOpportunities(req, res, next) {
+  try {
+    const tenantId = req.tenantId;
+    const { 
+      startDate, 
+      endDate, 
+      opportunityType = 'all' 
+    } = req.query;
+
+    const options = {};
+    if (startDate) options.startDate = new Date(startDate);
+    if (endDate) options.endDate = new Date(endDate);
+    if (opportunityType) options.opportunityType = opportunityType;
+
+    const costingAnalyticsService = require('./costing-analytics.service');
+    const opportunities = await costingAnalyticsService.getCostOptimizationOpportunities(tenantId, options);
+    res.json({ success: true, data: opportunities });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getInventoryValuation,
   getCostAnalysis,
@@ -176,5 +354,15 @@ module.exports = {
   getSupplierCostComparison,
   getCostTrends,
   getMarginAnalysis,
-  generateCostReport
+  generateCostReport,
+  // Advanced Analytics Controllers
+  getCostAnalyticsDashboard,
+  getCostOptimizationRecommendations,
+  getCostForecast,
+  getCostBenchmarking,
+  // Advanced Analytics Service Controllers
+  getCostVarianceAnalysis,
+  getCostCenterAnalysis,
+  getCostImpactAnalysis,
+  getCostOptimizationOpportunities
 };

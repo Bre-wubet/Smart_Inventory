@@ -2,6 +2,7 @@ const { prisma } = require('../../config/db');
 const { ValidationError } = require('../../core/exceptions');
 const { POStatus } = require('../../core/constants');
 const inventoryTransactionService = require('../../core/services/inventoryTransaction.service');
+const { integrationManager } = require('../../integrations');
 
 async function createPurchaseOrder(purchaseOrderData) {
   const { supplierId, items, expectedAt, reference, tenantId } = purchaseOrderData;
